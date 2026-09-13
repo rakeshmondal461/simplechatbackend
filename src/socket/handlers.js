@@ -1,4 +1,4 @@
-const { pool } = require("../config/db");
+import { pool } from "../config/db.js";
 
 function registerSocketHandlers(io, socket) {
   console.log(`User connected: ${socket.userId} (${socket.id})`);
@@ -49,4 +49,4 @@ function registerSocketHandlers(io, socket) {
   });
 }
 
-module.exports = { registerSocketHandlers };
+export { registerSocketHandlers };

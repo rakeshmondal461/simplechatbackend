@@ -1,4 +1,4 @@
-const jwt = require("jsonwebtoken");
+import jwt from "jsonwebtoken";
 
 /**
  * Socket.io authentication middleware.
@@ -25,4 +25,4 @@ function socketAuthMiddleware(socket, next) {
   }
 }
 
-module.exports = { socketAuthMiddleware };
+export { socketAuthMiddleware };

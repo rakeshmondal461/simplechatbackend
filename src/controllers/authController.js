@@ -1,6 +1,6 @@
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const { pool } = require("../config/db");
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { pool } from "../config/db.js";
 
 class AuthController {
   static signToken(user) {
@@ -91,4 +91,4 @@ class AuthController {
   }
 }
 
-module.exports = AuthController;
+export default AuthController;

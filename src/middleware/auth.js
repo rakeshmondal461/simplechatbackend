@@ -1,4 +1,4 @@
-const jwt = require("jsonwebtoken");
+import jwt from "jsonwebtoken";
 
 if (!process.env.JWT_SECRET) {
   throw new Error('JWT_SECRET is not set — check your environment configuration');
@@ -25,4 +25,4 @@ function requireAuth(req, res, next) {
   }
 }
 
-module.exports = { requireAuth };
+export { requireAuth };

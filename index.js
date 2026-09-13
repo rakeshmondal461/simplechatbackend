@@ -1,9 +1,8 @@
-const http = require("http");
-const app = require("./src/app");
-const { initSocket } = require("./src/socket");
-const { checkConnection } = require("./src/config/db");
-const { closeRedisClients } = require("./src/config/redis");
-const { pool } = require("./src/config/db");
+import http from "http";
+import app from "./src/app.js";
+import { initSocket } from "./src/socket/index.js";
+import { checkConnection, pool } from "./src/config/db.js";
+import { closeRedisClients } from "./src/config/redis.js";
 
 const PORT = process.env.PORT || 3000;
 

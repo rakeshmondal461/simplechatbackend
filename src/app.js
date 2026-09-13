@@ -1,9 +1,9 @@
-const express = require("express");
-const cors = require("cors");
-const { pool } = require("./config/db");
-const authRouter = require("./routes/auth");
-const userRouter = require("./routes/user");
-const chatRouter = require("./routes/chat");
+import express from "express";
+import cors from "cors";
+import { pool } from "./config/db.js";
+import authRouter from "./routes/auth.js";
+import userRouter from "./routes/user.js";
+import chatRouter from "./routes/chat.js";
 
 const app = express();
 
@@ -25,4 +25,4 @@ app.get("/health", async (req, res) => {
   }
 });
 
-module.exports = app;
+export default app;

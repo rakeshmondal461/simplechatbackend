@@ -1,4 +1,4 @@
-const { pool } = require("../config/db");
+import { pool } from "../config/db.js";
 
 class userController {
   static async userProfile(req, res) {
@@ -20,4 +20,4 @@ class userController {
   }
 }
 
-module.exports = userController;
+export default userController;

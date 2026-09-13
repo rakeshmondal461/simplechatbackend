@@ -1,4 +1,4 @@
-const { pool } = require("../config/db");
+import { pool } from "../config/db.js";
 
 class ChatController {
   static async createChatRoom(roomName) {
@@ -287,4 +287,4 @@ class ChatController {
   }
 }
 
-module.exports = ChatController;
+export default ChatController;

@@ -1,6 +1,6 @@
-const { Router } = require("express");
-const { requireAuth } = require("../middleware/auth");
-const ChatController = require("../controllers/chatController");
+import { Router } from "express";
+import { requireAuth } from "../middleware/auth.js";
+import ChatController from "../controllers/chatController.js";
 
 const router = Router();
 
@@ -14,4 +14,4 @@ router.get(
 router.post("/initchatroom", requireAuth, ChatController.initNewRoom);
 router.post("/send", requireAuth, ChatController.sendOneToOneMessage);
 
-module.exports = router;
+export default router;

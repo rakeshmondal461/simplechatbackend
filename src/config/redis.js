@@ -1,4 +1,4 @@
-const { createClient } = require("redis");
+import { createClient } from "redis";
 
 const REDIS_URL = process.env.REDIS_URL || "redis://redis:6379";
 
@@ -25,4 +25,4 @@ async function closeRedisClients() {
   await Promise.all([pubClient?.quit(), subClient?.quit()].filter(Boolean));
 }
 
-module.exports = { getRedisClients, closeRedisClients };
+export { getRedisClients, closeRedisClients };

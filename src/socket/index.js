@@ -1,8 +1,8 @@
-const { Server } = require("socket.io");
-const { createAdapter } = require("@socket.io/redis-adapter");
-const { getRedisClients } = require("../config/redis");
-const { socketAuthMiddleware } = require("./auth");
-const { registerSocketHandlers } = require("./handlers");
+import { Server } from "socket.io";
+import { createAdapter } from "@socket.io/redis-adapter";
+import { getRedisClients } from "../config/redis.js";
+import { socketAuthMiddleware } from "./auth.js";
+import { registerSocketHandlers } from "./handlers.js";
 
 async function initSocket(httpServer) {
   const io = new Server(httpServer, {
@@ -25,4 +25,4 @@ async function initSocket(httpServer) {
   return io;
 }
 
-module.exports = { initSocket };
+export { initSocket };
