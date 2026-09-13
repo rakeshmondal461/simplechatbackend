@@ -164,8 +164,6 @@ class ChatController {
     try {
       const { id: receiverId } = req.params;
 
-      console.log("receiverId>>>>", receiverId);
-
       const result = await pool.query(
         `
             SELECT room_id
@@ -193,15 +191,40 @@ class ChatController {
     }
   }
 
+  static async chatUsers(req, res) {
+    try {
+      const result = await pool.query(
+        `SELECT id, username, created_at FROM users WHERE id <> $1`,
+        [req.user.id],
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      return res.json({ users: result.rows });
+    } catch (err) {
+      console.error("GET /users/me error:", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
+
   static async getOneToOneMessages(req, res) {
     try {
-      const { roomid } = req.parms;
+      const roomid = req.params.roomid;
+      if (!roomid) {
+        return res.status(401).json({ error: "room id required" });
+      }
       const result2 = await pool.query(
         `
-            SELECT *
-            FROM messages
-            where room_id=$l1 and sender_id=$l2
-            `,
+        SELECT id, room_id, sender_id, content, created_at,
+        case 
+          when sender_id = $2 then true
+          else false
+        end as sent_by_me
+        FROM messages
+        WHERE room_id = $1
+      `,
         [roomid, req.user.id],
       );
 
@@ -211,10 +234,54 @@ class ChatController {
 
       return res.json({
         message: "chats retrieved successfully",
-        chats: result2.rows[0],
+        chats: result2.rows,
       });
     } catch (err) {
       console.error("GET /users/me error:", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
+
+  static async sendOneToOneMessage(req, res) {
+    const { roomid, content } = req.body;
+    const loggedUserId = req.user.id;
+
+    if (!roomid) {
+      return res.status(400).json({ error: "room id is required" });
+    }
+    if (!content) {
+      return res.status(400).json({ error: "content can't be empty" });
+    }
+
+    const resultRoomQr = await pool.query(`SELECT * FROM rooms WHERE id = $1`, [
+      roomid,
+    ]);
+
+    if (resultRoomQr.rows.length === 0) {
+      return res.status(404).json({ error: "Invalid room id" });
+    }
+
+    try {
+      const result = await pool.query(
+        `INSERT INTO messages (room_id, sender_id, content)
+         VALUES ($1, $2,$3)
+         RETURNING room_id, sender_id, content, created_at`,
+        [roomid, loggedUserId, content],
+      );
+
+      const user = result.rows[0];
+
+      if (user.sender_id && loggedUserId === user.sender_id) {
+        Object.assign(user, { sent_by_me: true });
+      }
+
+      return res.status(201).json({ message: "message sent", user });
+    } catch (err) {
+      if (err.code === "23505") {
+        // unique_violation — username already taken
+        return res.status(409).json({ error: "Username already taken" });
+      }
+      console.error("error while sent messgae:", err);
       return res.status(500).json({ error: "Internal server error" });
     }
   }
