@@ -62,6 +62,36 @@ class ChatController {
     try {
       await client.query("BEGIN");
 
+      // Serialize concurrent requests for this exact pair so two
+      // simultaneous calls can't both pass the "no existing room" check
+      // and each create their own room.
+      const lockKey = [senderId, receiverId].sort().join(":");
+      await client.query(`SELECT pg_advisory_xact_lock(hashtext($1))`, [
+        lockKey,
+      ]);
+
+      // Reuse an existing direct room between these two users, if one
+      // exists, instead of creating a new one.
+      const existingRoomRes = await client.query(
+        `SELECT room_id
+           FROM room_members
+          WHERE user_id = ANY($1::uuid[])
+          GROUP BY room_id
+         HAVING COUNT(DISTINCT user_id) = 2
+            AND COUNT(*) FILTER (WHERE user_id = ANY($1::uuid[])) = 2`,
+        [[senderId, receiverId]],
+      );
+
+      if (existingRoomRes.rows.length > 0) {
+        await client.query("COMMIT");
+        return {
+          id: existingRoomRes.rows[0].room_id,
+          senderId,
+          receiverId,
+          reused: true,
+        };
+      }
+
       const roomId = await ChatController.createChatRoom(
         `${senderDetails.username},${receiverDetails.username}`,
         client,
@@ -69,20 +99,6 @@ class ChatController {
 
       if (!roomId) {
         throw new Error("Failed to create chat room");
-      }
-
-      // Explicit pre-check: same (room_id, user_id) pair can't already exist.
-      // Lock the rows for this room_id so a concurrent insert can't sneak in
-      // between the check and the insert.
-      const existingRes = await client.query(
-        `SELECT user_id FROM room_members WHERE room_id = $1 AND user_id = ANY($2::uuid[]) FOR UPDATE`,
-        [roomId, [senderId, receiverId]],
-      );
-
-      if (existingRes.rows.length > 0) {
-        const dupErr = new Error("Room membership already exists");
-        dupErr.statusCode = 409;
-        throw dupErr;
       }
 
       await client.query(
@@ -97,7 +113,7 @@ class ChatController {
 
       await client.query("COMMIT");
 
-      return { id: roomId, senderId, receiverId };
+      return { id: roomId, senderId, receiverId, reused: false };
     } catch (err) {
       await client.query("ROLLBACK");
 
