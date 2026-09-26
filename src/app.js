@@ -4,6 +4,7 @@ import { pool } from "./config/db.js";
 import authRouter from "./routes/auth.js";
 import userRouter from "./routes/user.js";
 import chatRouter from "./routes/chat.js";
+import groupRouter from "./routes/groups.js";
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use(express.json());
 app.use("/api/auth", authRouter);
 app.use("/api/users", userRouter);
 app.use("/api/chat", chatRouter);
+app.use("/api/groups", groupRouter);
 
 app.get("/health", async (req, res) => {
   try {

@@ -51,11 +51,11 @@ async function registerSocketHandlers(io, socket) {
   });
 
   socket.on("typing:start", (roomId) => {
-    socket.to(roomId).emit("typing:start", { userId, roomId });
+    socket.to(roomId).emit("typing:start", { userId, username: socket.username, roomId });
   });
 
   socket.on("typing:stop", (roomId) => {
-    socket.to(roomId).emit("typing:stop", { userId, roomId });
+    socket.to(roomId).emit("typing:stop", { userId, username: socket.username, roomId });
   });
 
   // ── Online presence: mark user offline on disconnect ────────────────────────
