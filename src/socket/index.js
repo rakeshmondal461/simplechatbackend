@@ -2,13 +2,14 @@ import { Server } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
 import { getRedisClients } from "../config/redis.js";
 import { socketAuthMiddleware } from "./auth.js";
-import { registerSocketHandlers } from "./handlers.js";
+import { registerSocketHandlers, joinUserRoom } from "./handlers.js";
 
 async function initSocket(httpServer) {
   const io = new Server(httpServer, {
     cors: {
-      origin: process.env.CLIENT_ORIGIN || "*",
+      origin: process.env.CLIENT_ORIGIN || "http://localhost:5173",
       methods: ["GET", "POST"],
+      credentials: true,
     },
   });
 
@@ -18,8 +19,10 @@ async function initSocket(httpServer) {
 
   io.use(socketAuthMiddleware);
 
-  io.on("connection", (socket) => {
-    registerSocketHandlers(io, socket);
+  io.on("connection", async (socket) => {
+    // Join a per-user room first (used for multi-tab presence counting)
+    await joinUserRoom(socket);
+    await registerSocketHandlers(io, socket);
   });
 
   return io;

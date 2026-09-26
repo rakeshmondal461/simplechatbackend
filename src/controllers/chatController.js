@@ -1,4 +1,5 @@
 import { pool } from "../config/db.js";
+import { getOnlineUserIds } from "../config/presence.js";
 
 class ChatController {
   static async createChatRoom(roomName) {
@@ -193,18 +194,41 @@ class ChatController {
 
   static async chatUsers(req, res) {
     try {
-      const result = await pool.query(
-        `SELECT id, username, created_at FROM users WHERE id <> $1`,
-        [req.user.id],
-      );
+      const [result, onlineIds] = await Promise.all([
+        pool.query(
+          `SELECT id, username, created_at FROM users WHERE id <> $1`,
+          [req.user.id],
+        ),
+        getOnlineUserIds(),
+      ]);
 
       if (result.rows.length === 0) {
         return res.status(404).json({ error: "User not found" });
       }
 
-      return res.json({ users: result.rows });
+      const users = result.rows.map((u) => ({
+        ...u,
+        is_online: onlineIds.has(String(u.id)),
+      }));
+
+      return res.json({ users });
     } catch (err) {
-      console.error("GET /users/me error:", err);
+      console.error("GET /chat/cusers error:", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
+
+  /**
+   * GET /api/chat/online
+   * Returns the set of currently-online user IDs.
+   * Lightweight endpoint for clients that only need presence data.
+   */
+  static async getOnlineUsers(req, res) {
+    try {
+      const onlineIds = await getOnlineUserIds();
+      return res.json({ online: Array.from(onlineIds) });
+    } catch (err) {
+      console.error("GET /chat/online error:", err);
       return res.status(500).json({ error: "Internal server error" });
     }
   }

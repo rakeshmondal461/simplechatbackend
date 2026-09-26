@@ -5,6 +5,7 @@ import ChatController from "../controllers/chatController.js";
 const router = Router();
 
 router.get("/cusers", requireAuth, ChatController.chatUsers);
+router.get("/online", requireAuth, ChatController.getOnlineUsers);
 router.get("/fetchroom/:id", requireAuth, ChatController.fetchChatRoom);
 router.get(
   "/getmessage/:roomid",
@@ -15,3 +16,4 @@ router.post("/initchatroom", requireAuth, ChatController.initNewRoom);
 router.post("/send", requireAuth, ChatController.sendOneToOneMessage);
 
 export default router;
+
